@@ -9,6 +9,7 @@ exclude = ["/dlib-test", "README.tpl"]
 readme = "README.md"
 keywords = ["dylib", "dlopen"]
 categories = ["api-bindings"]
+edition = "2021"
 
 [dependencies]
 libloading = ">=0.7, <0.9"
