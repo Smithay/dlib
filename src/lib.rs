@@ -209,19 +209,22 @@ macro_rules! ffi_dispatch_static(
 #[macro_export]
 macro_rules! link_external_library(
     ($link: expr,
-        $(statics: $($sname: ident: $stype: ty),+,)|*
-        $(functions: $(fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
-        $(varargs: $(fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
+        $(statics: $($(#[$sattr:meta])* $sname: ident: $stype: ty),+,)|*
+        $(functions: $($(#[$fattr:meta])* fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
+        $(varargs: $($(#[$vattr:meta])* fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
     ) => (
         #[link(name = $link)]
         extern "C" {
             $($(
+                $(#[$sattr])*
                 pub static $sname: $stype;
             )+)*
             $($(
+                $(#[$fattr])*
                 pub fn $fname($(_: $farg),*) -> $fret;
             )+)*
             $($(
+                $(#[$vattr])*
                 pub fn $vname($(_: $vargs),+ , ...) -> $vret;
             )+)*
         }
@@ -262,27 +265,30 @@ impl std::fmt::Display for DlError {
 #[macro_export]
 macro_rules! dlopen_external_library(
     (__struct, $structname: ident,
-        $(statics: $($sname: ident: $stype: ty),+,)|*
-        $(functions: $(fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
-        $(varargs: $(fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
+        $(statics: $($(#[$sattr:meta])* $sname: ident: $stype: ty),+,)|*
+        $(functions: $($(#[$fattr:meta])* fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
+        $(varargs: $($(#[$vattr:meta])* fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
     ) => (
         pub struct $structname {
             __lib: $crate::Library,
             $($(
+                $(#[$sattr])*
                 pub $sname: $crate::Symbol<'static, &'static $stype>,
             )+)*
             $($(
+                $(#[$fattr])*
                 pub $fname: $crate::Symbol<'static, unsafe extern "C" fn($($farg),*) -> $fret>,
             )+)*
             $($(
+                $(#[$vattr])*
                 pub $vname: $crate::Symbol<'static, unsafe extern "C" fn($($vargs),+ , ...) -> $vret>,
             )+)*
         }
     );
     (__impl, $structname: ident,
-        $(statics: $($sname: ident: $stype: ty),+,)|*
-        $(functions: $(fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
-        $(varargs: $(fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
+        $(statics: $($(#[$sattr:meta])* $sname: ident: $stype: ty),+,)|*
+        $(functions: $($(#[$fattr:meta])* fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
+        $(varargs: $($(#[$vattr:meta])* fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
     ) => (
     impl $structname {
         pub unsafe fn open(name: &str) -> Result<$structname, $crate::DlError> {
@@ -290,7 +296,7 @@ macro_rules! dlopen_external_library(
             use std::mem::transmute;
             let lib = $crate::Library::new(name).map_err($crate::DlError::CantOpen)?;
             let s = $structname {
-                $($($sname: {
+                $($($(#[$sattr])* $sname: {
                     let s_name = concat!(stringify!($sname), "\0");
                     transmute(match lib.get::<&'static $stype>(s_name.as_bytes()) {
                         Ok(s) => s,
@@ -298,7 +304,7 @@ macro_rules! dlopen_external_library(
                     })
                 },
                 )+)*
-                $($($fname: {
+                $($($(#[$fattr])* $fname: {
                     let s_name = concat!(stringify!($fname), "\0");
                     transmute(match lib.get::<unsafe extern "C" fn($($farg),*) -> $fret>(s_name.as_bytes()) {
                         Ok(s) => s,
@@ -306,7 +312,7 @@ macro_rules! dlopen_external_library(
                     })
                 },
                 )+)*
-                $($($vname: {
+                $($($(#[$vattr])* $vname: {
                     let s_name = concat!(stringify!($vname), "\0");
                     transmute(match lib.get::<unsafe extern "C" fn($($vargs),+ , ...) -> $vret>(s_name.as_bytes()) {
                         Ok(s) => s,
@@ -321,19 +327,19 @@ macro_rules! dlopen_external_library(
     }
     );
     ($structname: ident,
-        $(statics: $($sname: ident: $stype: ty),+,)|*
-        $(functions: $(fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
-        $(varargs: $(fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
+        $(statics: $($(#[$sattr:meta])* $sname: ident: $stype: ty),+,)|*
+        $(functions: $($(#[$fattr:meta])* fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
+        $(varargs: $($(#[$vattr:meta])* fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
     ) => (
         $crate::dlopen_external_library!(__struct,
-            $structname, $(statics: $($sname: $stype),+,)|*
-            $(functions: $(fn $fname($($farg),*) -> $fret),+,)|*
-            $(varargs: $(fn $vname($($vargs),+) -> $vret),+,)|*
+            $structname, $(statics: $($(#[$sattr])* $sname: $stype),+,)|*
+            $(functions: $($(#[$fattr])* fn $fname($($farg),*) -> $fret),+,)|*
+            $(varargs: $($(#[$vattr])* fn $vname($($vargs),+) -> $vret),+,)|*
         );
         $crate::dlopen_external_library!(__impl,
-            $structname, $(statics: $($sname: $stype),+,)|*
-            $(functions: $(fn $fname($($farg),*) -> $fret),+,)|*
-            $(varargs: $(fn $vname($($vargs),+) -> $vret),+,)|*
+            $structname, $(statics: $($(#[$sattr])* $sname: $stype),+,)|*
+            $(functions: $($(#[$fattr])* fn $fname($($farg),*) -> $fret),+,)|*
+            $(varargs: $($(#[$vattr])* fn $vname($($vargs),+) -> $vret),+,)|*
         );
         unsafe impl Sync for $structname { }
     );
@@ -353,34 +359,34 @@ macro_rules! dlopen_external_library(
 #[macro_export]
 macro_rules! external_library(
     (feature=$feature: expr, $structname: ident, $link: expr,
-        $(statics: $($sname: ident: $stype: ty),+,)|*
-        $(functions: $(fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
-        $(varargs: $(fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
+        $(statics: $($(#[$sattr:meta])* $sname: ident: $stype: ty),+,)|*
+        $(functions: $($(#[$fattr:meta])* fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
+        $(varargs: $($(#[$vattr:meta])* fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
     ) => (
         #[cfg(feature = $feature)]
         $crate::dlopen_external_library!(
-            $structname, $(statics: $($sname: $stype),+,)|*
-            $(functions: $(fn $fname($($farg),*) -> $fret),+,)|*
-            $(varargs: $(fn $vname($($vargs),+) -> $vret),+,)|*
+            $structname, $(statics: $($(#[$sattr])* $sname: $stype),+,)|*
+            $(functions: $($(#[$fattr])* fn $fname($($farg),*) -> $fret),+,)|*
+            $(varargs: $($(#[$vattr])* fn $vname($($vargs),+) -> $vret),+,)|*
         );
 
         #[cfg(not(feature = $feature))]
         $crate::link_external_library!(
-            $link, $(statics: $($sname: $stype),+,)|*
-            $(functions: $(fn $fname($($farg),*) -> $fret),+,)|*
-            $(varargs: $(fn $vname($($vargs),+) -> $vret),+,)|*
+            $link, $(statics: $($(#[$sattr])* $sname: $stype),+,)|*
+            $(functions: $($(#[$fattr])* fn $fname($($farg),*) -> $fret),+,)|*
+            $(varargs: $($(#[$vattr])* fn $vname($($vargs),+) -> $vret),+,)|*
         );
     );
     ($structname: ident, $link: expr,
-        $(statics: $($sname: ident: $stype: ty),+,)|*
-        $(functions: $(fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
-        $(varargs: $(fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
+        $(statics: $($(#[$sattr:meta])* $sname: ident: $stype: ty),+,)|*
+        $(functions: $($(#[$fattr:meta])* fn $fname: ident($($farg: ty),*) -> $fret:ty),+,)|*
+        $(varargs: $($(#[$vattr:meta])* fn $vname: ident($($vargs: ty),+) -> $vret: ty),+,)|*
     ) => (
         $crate::external_library!(
             feature="dlopen", $structname, $link,
-            $(statics: $($sname: $stype),+,)|*
-            $(functions: $(fn $fname($($farg),*) -> $fret),+,)|*
-            $(varargs: $(fn $vname($($vargs),+) -> $vret),+,)|*
+            $(statics: $($(#[$sattr])* $sname: $stype),+,)|*
+            $(functions: $($(#[$fattr])* fn $fname($($farg),*) -> $fret),+,)|*
+            $(varargs: $($(#[$vattr])* fn $vname($($vargs),+) -> $vret),+,)|*
         );
     );
 );
