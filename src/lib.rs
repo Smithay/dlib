@@ -6,6 +6,8 @@
 //! dlib defines the `external_library!` macro, which can be invoked in this way:
 //!
 //! ```rust
+//! # use dlib::external_library;
+//! # use std::ffi::{c_float, c_int};
 //! external_library!(feature="dlopen-foo", Foo, "foo",
 //!     statics:
 //!         me: c_int,
@@ -28,7 +30,8 @@
 //! this macro will expand to an extern block defining each of the items, using the third argument
 //! of the macro as a link name:
 //!
-//! ```rust
+//! ```rust no_run
+//! # use std::ffi::{c_float, c_int, c_void};
 //! #[link(name = "foo")]
 //! extern "C" {
 //!     pub static me: c_int;
@@ -47,6 +50,8 @@
 //! and a method `open`, which tries to load the library from the name or path given as an argument.
 //!
 //! ```rust
+//! # use dlib::DlError;
+//! # use std::ffi::{c_float, c_int, c_void};
 //! pub struct Foo {
 //!     pub me: &'static c_int,
 //!     pub you: &'static c_float,
@@ -59,7 +64,10 @@
 //!
 //!
 //! impl Foo {
-//!     pub unsafe fn open(name: &str) -> Result<Foo, DlError> { /* ... */ }
+//!     pub unsafe fn open(name: &str) -> Result<Foo, DlError> {
+//!         /* ... */
+//!         # todo!()
+//!     }
 //! }
 //! ```
 //!
@@ -90,7 +98,9 @@
 //!
 //! Then give the name of that feature as the `feature` argument to dlib's macros:
 //!
-//! ```rust
+//! ```rust no_run
+//! # use dlib::external_library;
+//! # use std::ffi::c_int;
 //! external_library!(feature="dlopen-foo", Foo, "foo",
 //!     functions:
 //!         fn foo() -> c_int,
@@ -99,7 +109,12 @@
 //!
 //! `dlib` provides helper macros to dispatch the access to foreign symbols:
 //!
-//! ```rust
+//! ```rust no_run
+//! # use dlib::{ffi_dispatch, ffi_dispatch_static};
+//! # let arg1 = todo!();
+//! # let arg2 = todo!();
+//! # let function: fn(u32, u32) = todo!();
+//! # let my_static_var = todo!();
 //! ffi_dispatch!(feature="dlopen-foo", Foo, function, arg1, arg2);
 //! ffi_dispatch_static!(feature="dlopen-foo", Foo, my_static_var);
 //! ```
@@ -122,6 +137,8 @@
 //! Then, it can become as simple as putting this on top of all modules using the FFI:
 //!
 //! ```rust
+//! # #![allow(unexpected_cfgs)]
+//! # mod ffi {}
 //! #[cfg(feature = "dlopen-foo")]
 //! use ffi::FOO_STATIC;
 //! #[cfg(not(feature = "dlopen-foo"))]
