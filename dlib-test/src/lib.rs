@@ -1,12 +1,22 @@
 use dlib::external_library;
 
 external_library!(Mlib, "m",
+    /* TODO: local ambiguity when calling macro
+    statics:
+        #[cfg(feature = "nonexistant")]
+        non_existant_static: f64,
+    */
     functions:
         fn cos(f64) -> f64,
         #[cfg(feature = "sin")]
         fn sin(f64) -> f64,
         #[cfg(feature = "nonexistant")]
         fn nonexistant_function(f64) -> f64,
+    /* TODO: no rules expected this token in macro call
+    varargs:
+        #[cfg(feature = "nonexistant")]
+        fn nonexistant_varargs(f64 ...) -> f64,
+    */
 );
 
 #[cfg(feature = "dlopen")]
