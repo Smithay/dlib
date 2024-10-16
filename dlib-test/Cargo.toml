@@ -10,4 +10,7 @@ dlib = { path = "../" }
 lazy_static = { version = "1.0", optional = true }
 
 [features]
-"dlopen" = ["lazy_static"]
+default = ["sin"]
+sin = []
+nonexistant = []
+dlopen = ["lazy_static"]

@@ -3,6 +3,10 @@ use dlib::external_library;
 external_library!(Mlib, "m",
     functions:
         fn cos(f64) -> f64,
+        #[cfg(feature = "sin")]
+        fn sin(f64) -> f64,
+        #[cfg(feature = "nonexistant")]
+        fn nonexistant_function(f64) -> f64,
 );
 
 #[cfg(feature = "dlopen")]
@@ -20,5 +24,14 @@ mod tests {
         let angle = 1.8;
         let cosinus = unsafe { ffi_dispatch!(M_STATIC, cos, angle) };
         assert_eq!(cosinus, angle.cos());
+
+    }
+
+    #[cfg(feature = "sin")]
+    #[test]
+    fn invoke_sin() {
+        let angle = 1.8;
+        let sine = unsafe { ffi_dispatch!(M_STATIC, sin, angle) };
+        assert_eq!(sine, angle.sin());
     }
 }
