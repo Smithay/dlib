@@ -11,4 +11,8 @@ keywords = ["dylib", "dlopen"]
 categories = ["api-bindings"]
 
 [dependencies]
-libloading = ">=0.7, <0.9"
+libloading = { version = ">=0.7, <0.9", optional = true }
+
+[features]
+default = [ "std" ]
+std = [ "dep:libloading" ]
