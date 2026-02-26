@@ -34,7 +34,6 @@ mod tests {
         let angle = 1.8;
         let cosinus = unsafe { ffi_dispatch!(M_STATIC, cos, angle) };
         assert_eq!(cosinus, angle.cos());
-
     }
 
     #[cfg(feature = "sin")]
