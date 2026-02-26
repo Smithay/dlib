@@ -2,8 +2,9 @@
 name = "dlib-test"
 version = "0.1.0"
 authors = ["Elinor Berger <elinor@safaradeg.net>"]
-edition = "2018"
+edition = "2021"
 publish = false
+rust-version = "1.56"
 
 [dependencies]
 dlib = { path = "../" }
