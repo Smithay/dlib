@@ -1,6 +1,6 @@
 [package]
 name = "dlib"
-version = "0.5.2"
+version = "0.5.3"
 repository = "https://github.com/elinorbgr/dlib"
 authors = ["Elinor Berger <elinor@safaradeg.net>"]
 license = "MIT"
