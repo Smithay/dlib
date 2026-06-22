@@ -13,7 +13,7 @@ edition = "2021"
 rust-version = "1.56"
 
 [dependencies]
-libloading = ">=0.7, <0.9"
+libloading = "0.9"
 
 [workspace]
 members = [
